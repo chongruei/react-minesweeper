@@ -1,0 +1,12 @@
+.square {
+  @apply flex;
+  @apply items-center;
+  @apply justify-center;
+  @apply h-8;
+  @apply w-8;
+  @apply hover:opacity-50;
+  @apply bg-no-repeat;
+  @apply bg-center;
+
+  background-size: 24px 24px;
+}
