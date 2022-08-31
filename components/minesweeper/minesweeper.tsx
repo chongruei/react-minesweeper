@@ -45,7 +45,7 @@ const MinesweeperView: FC<IMinesweeperConfig> = ({ columns, rows, mines }) => {
   }, [gameConfig, columns, rows, mines]);
 
   return (
-    <div className="rounded-md overflow-hidden">
+    <div className="rounded-md overflow-hidden select-none">
       <Toolbar />
       <Board />
     </div>
