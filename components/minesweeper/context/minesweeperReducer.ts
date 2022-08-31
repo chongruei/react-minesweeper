@@ -19,7 +19,6 @@ import {
   isAbleToOpenSquares,
   isAbleToSetFlag,
   isGameSet,
-  isRevealed,
   openSurroundSquare,
   openSurroundSquares,
   unVisitingAllSquare,
