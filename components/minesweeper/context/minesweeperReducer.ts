@@ -4,6 +4,7 @@ import {
   getAllBothFlagAndMines,
   isAvailiableBeVisiting,
   isCanMultipleOpen,
+  changeAllMinesToFlags,
 } from "./../utils";
 import { MouseBehavior } from "./../interface";
 import {
@@ -165,12 +166,14 @@ export const minesweeperReducer = (
 
       const newGameArray: Square[] = JSON.parse(JSON.stringify(gameArray));
       openSurroundSquare(newGameArray, openIndex, columns, rows);
+      const gameSet = isGameSet(newGameArray, mines);
+      if (gameSet) {
+        changeAllMinesToFlags(newGameArray);
+      }
 
       return {
         ...state,
-        gameStatus: isGameSet(newGameArray, mines)
-          ? GameStatus.WIN
-          : GameStatus.START,
+        gameStatus: gameSet ? GameStatus.WIN : GameStatus.START,
         gameArray: newGameArray,
       };
     }
@@ -200,11 +203,14 @@ export const minesweeperReducer = (
       const newGameArray: Square[] = JSON.parse(JSON.stringify(gameArray));
       openSurroundSquares(newGameArray, openIndexs, columns, rows);
 
+      const gameSet = isGameSet(newGameArray, mines);
+      if (gameSet) {
+        changeAllMinesToFlags(newGameArray);
+      }
+
       return {
         ...state,
-        gameStatus: isGameSet(newGameArray, mines)
-          ? GameStatus.WIN
-          : GameStatus.START,
+        gameStatus: gameSet ? GameStatus.WIN : GameStatus.START,
         gameArray: newGameArray,
       };
     }

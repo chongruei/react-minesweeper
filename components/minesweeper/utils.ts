@@ -139,6 +139,15 @@ export const isGameSet = (gameArray: Square[], mines: number): boolean => {
   );
 };
 
+export const getAllMines = (gameArray: Square[]) => {
+  return gameArray.filter((square) => isMine(square.state));
+};
+
+export const changeAllMinesToFlags = (gameArray: Square[]) => {
+  const allMines = getAllMines(gameArray);
+  allMines.forEach((square) => (square.flagged = true));
+};
+
 export const getNumberColor = (num: number) => {
   switch (num) {
     case 1:
@@ -150,7 +159,7 @@ export const getNumberColor = (num: number) => {
     case 4:
       return "#7d308b";
     case 5:
-      return "#fbbf24";
+      return "#64748b";
     case 6:
       return "#475569";
     case 7:
