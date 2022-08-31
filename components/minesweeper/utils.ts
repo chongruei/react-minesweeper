@@ -219,13 +219,9 @@ export const visitingSquare = (square: Square): void => {
 };
 
 export const visitingMultiSquare = (squares: Square[]): void => {
-  if (squares.length > 0) {
-    squares.forEach((square) => {
-      if (isAvailiableBeVisiting(square)) {
-        square.visited = VisitState.VISITING;
-      }
-    });
-  }
+  squares
+    .filter((square) => isAvailiableBeVisiting(square))
+    .every((square: Square) => (square.visited = VisitState.VISITING));
 };
 
 export const unVisitingAllSquare = (squares: Square[]) => {
