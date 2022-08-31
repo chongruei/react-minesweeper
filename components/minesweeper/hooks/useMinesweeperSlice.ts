@@ -6,6 +6,8 @@ type UseMinesweeperSlice = {
   newGame: Callback;
   startGame: (squareIdx: number) => void;
   openSquare: (squareIdx: number) => void;
+  setFlag: (squareIdx: number) => void;
+  removeFlag: (squareIdx: number) => void;
 };
 
 export const useMinesweeperSlice = (): UseMinesweeperSlice => {
@@ -26,9 +28,25 @@ export const useMinesweeperSlice = (): UseMinesweeperSlice => {
     });
   };
 
+  const setFlag = (squareIdx: number) => {
+    dispatch({
+      type: MinesweeperActionType.SET_FLAG,
+      payload: { squareIdx },
+    });
+  };
+
+  const removeFlag = (squareIdx: number) => {
+    dispatch({
+      type: MinesweeperActionType.REMOVE_FLAG,
+      payload: { squareIdx },
+    });
+  };
+
   return {
     newGame,
     startGame,
     openSquare,
+    setFlag,
+    removeFlag,
   };
 };

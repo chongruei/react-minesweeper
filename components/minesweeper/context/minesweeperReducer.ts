@@ -6,7 +6,7 @@ import {
   Square,
   SquareState,
 } from "../interface";
-import { isGameSet, openSurroundSquares } from "../utils";
+import { isGameSet, isRevealed, openSurroundSquares } from "../utils";
 
 export const minesweeperReducer = (
   state: IMinesweeperState,
@@ -22,6 +22,7 @@ export const minesweeperReducer = (
         gameArray: Array(rows * columns).fill({
           surroundindMines: 0,
           visited: false,
+          flagged: false,
           state: SquareState.UNREVEALED_SQUARE,
         }),
       };
@@ -33,6 +34,7 @@ export const minesweeperReducer = (
       const minesArray: Square[] = Array(mines).fill({
         surroundindMines: 0,
         visited: false,
+        flagged: false,
         state: SquareState.UNREVEALED_MINE,
       });
 
@@ -40,6 +42,7 @@ export const minesweeperReducer = (
       const blankArray: Square[] = Array(rows * columns - mines - 1).fill({
         surroundindMines: 0,
         visited: false,
+        flagged: false,
         state: SquareState.UNREVEALED_SQUARE,
       });
 
@@ -52,16 +55,59 @@ export const minesweeperReducer = (
       gameArray.splice(squareIdx, 0, {
         surroundindMines: 0,
         visited: false,
+        flagged: false,
         state: SquareState.REVEALED_SQUARE,
       });
 
-      const newGameArray = JSON.parse(JSON.stringify(gameArray));
+      const newGameArray: Square[] = JSON.parse(JSON.stringify(gameArray));
       // first time need to open squares
       openSurroundSquares(newGameArray, squareIdx, state.columns, state.rows);
 
       return {
         ...state,
         gameStatus: GameStatus.START,
+        gameArray: newGameArray,
+      };
+    }
+    case MinesweeperActionType.SET_FLAG: {
+      const { squareIdx } = payload;
+      const clickedSquare = state.gameArray[squareIdx];
+
+      if (
+        isRevealed(clickedSquare.state) ||
+        state.gameStatus !== GameStatus.START
+      )
+        return { ...state };
+
+      const newGameArray: Square[] = JSON.parse(
+        JSON.stringify(state.gameArray)
+      );
+
+      newGameArray[squareIdx].flagged = true;
+
+      return {
+        ...state,
+        gameArray: newGameArray,
+      };
+    }
+    case MinesweeperActionType.REMOVE_FLAG: {
+      const { squareIdx } = payload;
+      const clickedSquare = state.gameArray[squareIdx];
+
+      if (
+        isRevealed(clickedSquare.state) ||
+        state.gameStatus !== GameStatus.START
+      )
+        return { ...state };
+
+      const newGameArray: Square[] = JSON.parse(
+        JSON.stringify(state.gameArray)
+      );
+
+      newGameArray[squareIdx].flagged = false;
+
+      return {
+        ...state,
         gameArray: newGameArray,
       };
     }
@@ -77,7 +123,9 @@ export const minesweeperReducer = (
         };
       }
 
-      const newGameArray = JSON.parse(JSON.stringify(state.gameArray));
+      const newGameArray: Square[] = JSON.parse(
+        JSON.stringify(state.gameArray)
+      );
       openSurroundSquares(newGameArray, squareIdx, state.columns, state.rows);
 
       return {

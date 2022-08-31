@@ -3,6 +3,9 @@ import { Square, SquareState } from "./interface";
 export const isMine = (st: SquareState) =>
   st === SquareState.REVEALED_MINE || st === SquareState.UNREVEALED_MINE;
 
+export const isRevealed = (st: SquareState) =>
+  st === SquareState.REVEALED_MINE || st === SquareState.REVEALED_SQUARE;
+
 export const getSurroundingIndexs = (
   squareIdx: number,
   columns: number,
@@ -53,7 +56,8 @@ export const openSurroundSquares = (
 ) => {
   const square = gameArray[squareIdx];
 
-  if (square.visited) return;
+  if (square.visited || square.flagged) return;
+
   square.state = SquareState.REVEALED_SQUARE;
   square.visited = true;
 

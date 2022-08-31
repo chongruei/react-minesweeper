@@ -1,9 +1,9 @@
-import { FC } from "react";
+import { FC, MouseEventHandler } from "react";
 import classnames from "classnames";
 import { useGameConig, useGameStatus } from "../hooks/useMinesweeperContext";
-import { GameStatus, Square as SquareType } from "../interface";
+import { GameStatus, Square as SquareType, SquareState } from "../interface";
 import { useMinesweeperSlice } from "../hooks/useMinesweeperSlice";
-import { isMine } from "../utils";
+import { isMine, isRevealed } from "../utils";
 
 import styles from "./square.module.scss";
 
@@ -13,17 +13,31 @@ interface ISquare {
 }
 
 export const Square: FC<ISquare> = ({ square, squareIndex }) => {
-  const { startGame, openSquare } = useMinesweeperSlice();
+  const { startGame, openSquare, setFlag, removeFlag } = useMinesweeperSlice();
   const { columns } = useGameConig();
   const gameStatus = useGameStatus();
 
-  const handleClickSquare = (squareIdx: number) => {
+  const { state, surroundindMines, flagged } = square;
+
+  const handleClickSquare = () => {
     if (gameStatus === GameStatus.NEW) {
-      startGame(squareIdx);
+      startGame(squareIndex);
     }
 
     if (gameStatus === GameStatus.START) {
-      openSquare(squareIdx);
+      openSquare(squareIndex);
+    }
+  };
+
+  const handleSetFlag: MouseEventHandler<HTMLDivElement> = (e) => {
+    e.preventDefault();
+    if (isRevealed(state) || gameStatus !== GameStatus.START) {
+      return;
+    }
+    if (!flagged) {
+      setFlag(squareIndex);
+    } else {
+      removeFlag(squareIndex);
     }
   };
 
@@ -49,10 +63,17 @@ export const Square: FC<ISquare> = ({ square, squareIndex }) => {
     }
   };
 
-  const backgroundImg =
-    gameStatus === GameStatus.LOSE && isMine(square.state)
-      ? 'url("/bomb.png")'
-      : "none";
+  const getBGImage = () => {
+    if (gameStatus === GameStatus.LOSE && isMine(square.state)) {
+      return 'url("/bomb.png")';
+    }
+
+    if (square.flagged) {
+      return 'url("/flag.png")';
+    }
+
+    return "none";
+  };
 
   const isDark =
     columns % 2 === 1
@@ -61,22 +82,23 @@ export const Square: FC<ISquare> = ({ square, squareIndex }) => {
 
   return (
     <div
-      style={{ backgroundImage: backgroundImg }}
+      style={{ backgroundImage: getBGImage() }}
       className={classnames(styles.square, {
         "bg-[#a9d751]": !isDark,
         "bg-[#a2d049]": isDark,
-        "bg-[#e4c29f]": square.visited && !isDark,
-        "bg-[#d7b899]": square.visited && isDark,
-        "bg-red-600": gameStatus === GameStatus.LOSE && isMine(square.state),
+        "bg-[#e4c29f]": state === SquareState.REVEALED_SQUARE && !isDark,
+        "bg-[#d7b899]": state === SquareState.REVEALED_SQUARE && isDark,
+        "bg-red-600": gameStatus === GameStatus.LOSE && isMine(state),
       })}
-      onClick={() => handleClickSquare(squareIndex)}
+      onClick={handleClickSquare}
+      onContextMenu={handleSetFlag}
     >
-      {square.surroundindMines > 0 && (
+      {surroundindMines > 0 && (
         <span
           className="font-extrabold text-2xl"
-          style={{ color: getNumberColor(square.surroundindMines) }}
+          style={{ color: getNumberColor(surroundindMines) }}
         >
-          {square.surroundindMines}
+          {surroundindMines}
         </span>
       )}
     </div>

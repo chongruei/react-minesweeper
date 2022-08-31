@@ -25,18 +25,60 @@ export enum MinesweeperActionType {
   NEW = "new",
   START = "start",
   OPEN_SQUARE = "openSquare",
+  SET_FLAG = "setFlag",
+  REMOVE_FLAG = "removeFlag",
   LOSE = "lose",
   WIN = "win",
 }
 
-export type MinesweeperAction = {
-  type: MinesweeperActionType;
-  payload?: any;
+type MinesweeperNewAction = {
+  type: MinesweeperActionType.NEW;
+  payload?: {
+    columns: number;
+    rows: number;
+    mines: number;
+  };
 };
+
+type MinesweeperStartAction = {
+  type: MinesweeperActionType.START;
+  payload: {
+    squareIdx: number;
+  };
+};
+
+type MinesweeperOpenSquareAction = {
+  type: MinesweeperActionType.OPEN_SQUARE;
+  payload: {
+    squareIdx: number;
+  };
+};
+
+type MinesweeperSetFlagAction = {
+  type: MinesweeperActionType.SET_FLAG;
+  payload: {
+    squareIdx: number;
+  };
+};
+
+type MinesweeperRemoveFlagAction = {
+  type: MinesweeperActionType.REMOVE_FLAG;
+  payload: {
+    squareIdx: number;
+  };
+};
+
+export type MinesweeperAction =
+  | MinesweeperNewAction
+  | MinesweeperStartAction
+  | MinesweeperOpenSquareAction
+  | MinesweeperSetFlagAction
+  | MinesweeperRemoveFlagAction;
 
 export type Square = {
   surroundindMines: number;
   visited: boolean;
+  flagged: boolean;
   state: SquareState;
 };
 
