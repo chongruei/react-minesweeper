@@ -203,10 +203,7 @@ export const openSurroundSquare = (
 
   // no any mines => continue openSurroundSquares
   if (findedMines === 0) {
-    for (let i = 0; i < surroundingIndexs.length; i++) {
-      const surroundingIdx = surroundingIndexs[i];
-      openSurroundSquare(gameArray, surroundingIdx, columns, rows);
-    }
+    openSurroundSquares(gameArray, surroundingIndexs, columns, rows);
   } else {
     square.surroundindMines = findedMines;
   }
