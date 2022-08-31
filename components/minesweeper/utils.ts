@@ -1,10 +1,42 @@
-import { Square, SquareState } from "./interface";
+import { Square, SquareState, VisitState } from "./interface";
 
 export const isMine = (st: SquareState) =>
   st === SquareState.REVEALED_MINE || st === SquareState.UNREVEALED_MINE;
 
 export const isRevealed = (st: SquareState) =>
   st === SquareState.REVEALED_MINE || st === SquareState.REVEALED_SQUARE;
+
+export const isCanMultipleOpen = (square: Square) => {
+  if (
+    square.state === SquareState.REVEALED_SQUARE &&
+    square.surroundindMines > 0
+  ) {
+    return true;
+  }
+  return false;
+};
+
+export const isAvailiableBeVisiting = (square: Square): boolean => {
+  const { visited, flagged, state } = square;
+  return visited === VisitState.NONE && !(flagged || isRevealed(state));
+};
+
+export const getFlagsAmountByIndexs = (
+  gameArray: Square[],
+  openIndexs: number[]
+) => {
+  return openIndexs.reduce((total, openIndex) => {
+    return gameArray[openIndex].flagged ? total + 1 : total;
+  }, 0);
+};
+
+export const getAllBothFlagAndMines = (mineArray: Square[]): Square[] => {
+  return mineArray.filter((square) => isBothFlagAndMine(square));
+};
+
+export const isBothFlagAndMine = (square: Square): boolean => {
+  return square.flagged && isMine(square.state);
+};
 
 export const getSurroundingIndexs = (
   squareIdx: number,
@@ -50,16 +82,28 @@ export const getSurroundingIndexs = (
 
 export const openSurroundSquares = (
   gameArray: Square[],
+  squareIndexs: number[],
+  columns: number,
+  rows: number
+) => {
+  squareIndexs.forEach((idx) => {
+    openSurroundSquare(gameArray, idx, columns, rows);
+  });
+};
+
+export const openSurroundSquare = (
+  gameArray: Square[],
   squareIdx: number,
   columns: number,
   rows: number
 ) => {
   const square = gameArray[squareIdx];
 
-  if (square.visited || square.flagged) return;
+  if (!square || square.visited === VisitState.VISITED || square.flagged)
+    return;
 
   square.state = SquareState.REVEALED_SQUARE;
-  square.visited = true;
+  square.visited = VisitState.VISITED;
 
   const surroundingIndexs = getSurroundingIndexs(squareIdx, columns, rows);
   let findedMines = 0;
@@ -78,7 +122,7 @@ export const openSurroundSquares = (
   if (findedMines === 0) {
     for (let i = 0; i < surroundingIndexs.length; i++) {
       const surroundingIdx = surroundingIndexs[i];
-      openSurroundSquares(gameArray, surroundingIdx, columns, rows);
+      openSurroundSquare(gameArray, surroundingIdx, columns, rows);
     }
   } else {
     square.surroundindMines = findedMines;
@@ -92,4 +136,26 @@ export const isGameSet = (gameArray: Square[], mines: number): boolean => {
     gameArray.filter((square) => square.state === SquareState.REVEALED_SQUARE)
       .length === needOpenSquareAmount
   );
+};
+
+export const getNumberColor = (num: number) => {
+  switch (num) {
+    case 1:
+      return "#3171b0";
+    case 2:
+      return "#4d8340";
+    case 3:
+      return "#ae4134";
+    case 4:
+      return "#7d308b";
+    case 5:
+      return "#fbbf24";
+    case 6:
+      return "#475569";
+    case 7:
+      return "#831843";
+    // lucky?
+    case 8:
+      return "#f0fdfa";
+  }
 };

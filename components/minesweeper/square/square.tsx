@@ -1,9 +1,15 @@
 import { FC, MouseEventHandler } from "react";
 import classnames from "classnames";
 import { useGameConig, useGameStatus } from "../hooks/useMinesweeperContext";
-import { GameStatus, Square as SquareType, SquareState } from "../interface";
+import {
+  GameStatus,
+  MouseBehavior,
+  Square as SquareType,
+  SquareState,
+  VisitState,
+} from "../interface";
 import { useMinesweeperSlice } from "../hooks/useMinesweeperSlice";
-import { isMine, isRevealed } from "../utils";
+import { getNumberColor, isMine, isRevealed } from "../utils";
 
 import styles from "./square.module.scss";
 
@@ -13,54 +19,53 @@ interface ISquare {
 }
 
 export const Square: FC<ISquare> = ({ square, squareIndex }) => {
-  const { startGame, openSquare, setFlag, removeFlag } = useMinesweeperSlice();
+  const {
+    openSquare,
+    setFlag,
+    setMouseBehavior,
+    resetMouseBehavior,
+    moveMousePosition,
+  } = useMinesweeperSlice();
   const { columns } = useGameConig();
   const gameStatus = useGameStatus();
 
-  const { state, surroundindMines, flagged } = square;
+  const { state, surroundindMines, flagged, visited } = square;
 
-  const handleClickSquare = () => {
-    if (gameStatus === GameStatus.NEW) {
-      startGame(squareIndex);
-    }
-
-    if (gameStatus === GameStatus.START) {
-      openSquare(squareIndex);
-    }
-  };
-
-  const handleSetFlag: MouseEventHandler<HTMLDivElement> = (e) => {
-    e.preventDefault();
+  const handleSetFlag = () => {
     if (isRevealed(state) || gameStatus !== GameStatus.START) {
       return;
     }
-    if (!flagged) {
-      setFlag(squareIndex);
-    } else {
-      removeFlag(squareIndex);
+    setFlag(squareIndex, !flagged);
+  };
+
+  const handleMouseDown: MouseEventHandler<HTMLDivElement> = (e) => {
+    e.preventDefault();
+
+    if (e.button === 0 && e.buttons === 1) {
+      // left
+      setMouseBehavior(squareIndex, MouseBehavior.SINGLE);
+    } else if (e.button === 2 && e.buttons === 2) {
+      //right
+      handleSetFlag();
+    } else if (e.buttons > 2) {
+      // middle
+      setMouseBehavior(squareIndex, MouseBehavior.MULTI);
     }
   };
 
-  const getNumberColor = (num: number) => {
-    switch (num) {
-      case 1:
-        return "#3171b0";
-      case 2:
-        return "#4d8340";
-      case 3:
-        return "#ae4134";
-      case 4:
-        return "#7d308b";
-      case 5:
-        return "#fbbf24";
-      case 6:
-        return "#475569";
-      case 7:
-        return "#831843";
-      // lucky?
-      case 8:
-        return "#f0fdfa";
-    }
+  const handleMouseUp: MouseEventHandler<HTMLDivElement> = (e) => {
+    e.preventDefault();
+    openSquare();
+    resetMouseBehavior();
+  };
+
+  const handleMouseEnter: MouseEventHandler<HTMLDivElement> = (e) => {
+    e.preventDefault();
+    moveMousePosition(squareIndex);
+  };
+
+  const handleMouseLeave = () => {
+    resetMouseBehavior();
   };
 
   const getBGImage = () => {
@@ -89,9 +94,14 @@ export const Square: FC<ISquare> = ({ square, squareIndex }) => {
         "bg-[#e4c29f]": state === SquareState.REVEALED_SQUARE && !isDark,
         "bg-[#d7b899]": state === SquareState.REVEALED_SQUARE && isDark,
         "bg-red-600": gameStatus === GameStatus.LOSE && isMine(state),
+        "opacity-50": visited === VisitState.VISITING,
       })}
-      onClick={handleClickSquare}
-      onContextMenu={handleSetFlag}
+      // onClick={handleClickSquare}
+      onContextMenu={(e) => e.preventDefault()}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
     >
       {surroundindMines > 0 && (
         <span

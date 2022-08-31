@@ -21,14 +21,27 @@ export enum SquareState {
   REVEALED_MINE = 4,
 }
 
+export enum VisitState {
+  NONE = 1,
+  VISITING = 2,
+  VISITED = 3,
+}
+
 export enum MinesweeperActionType {
   NEW = "new",
   START = "start",
   OPEN_SQUARE = "openSquare",
+  OPEN_SQUARES = "openSquares",
   SET_FLAG = "setFlag",
-  REMOVE_FLAG = "removeFlag",
+  SET_MOUSE_BEHAVIOR = "setMouseBehavior",
   LOSE = "lose",
   WIN = "win",
+}
+
+export enum MouseBehavior {
+  NONE = "none",
+  SINGLE = "single",
+  MULTI = "multi",
 }
 
 type MinesweeperNewAction = {
@@ -42,29 +55,29 @@ type MinesweeperNewAction = {
 
 type MinesweeperStartAction = {
   type: MinesweeperActionType.START;
-  payload: {
-    squareIdx: number;
-  };
 };
 
 type MinesweeperOpenSquareAction = {
   type: MinesweeperActionType.OPEN_SQUARE;
-  payload: {
-    squareIdx: number;
-  };
+};
+
+type MinesweeperOpenSquaresAction = {
+  type: MinesweeperActionType.OPEN_SQUARES;
 };
 
 type MinesweeperSetFlagAction = {
   type: MinesweeperActionType.SET_FLAG;
   payload: {
     squareIdx: number;
+    install: boolean;
   };
 };
 
-type MinesweeperRemoveFlagAction = {
-  type: MinesweeperActionType.REMOVE_FLAG;
+type MinesweeperSetMouseBehaviorAction = {
+  type: MinesweeperActionType.SET_MOUSE_BEHAVIOR;
   payload: {
     squareIdx: number;
+    behavior: MouseBehavior;
   };
 };
 
@@ -72,12 +85,13 @@ export type MinesweeperAction =
   | MinesweeperNewAction
   | MinesweeperStartAction
   | MinesweeperOpenSquareAction
+  | MinesweeperOpenSquaresAction
   | MinesweeperSetFlagAction
-  | MinesweeperRemoveFlagAction;
+  | MinesweeperSetMouseBehaviorAction;
 
 export type Square = {
   surroundindMines: number;
-  visited: boolean;
+  visited: VisitState;
   flagged: boolean;
   state: SquareState;
 };
@@ -89,6 +103,8 @@ export interface IMinesweeperConfig {
 }
 
 export interface IMinesweeperState extends IMinesweeperConfig {
+  openIndex: number;
+  mouseBehavior: MouseBehavior;
   gameStatus: GameStatus;
   gameArray: Square[];
 }

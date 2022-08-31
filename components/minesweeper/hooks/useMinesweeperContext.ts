@@ -4,11 +4,15 @@ import {
   GameStatus,
   IMinesweeperConfig,
   MinesweeperAction,
+  MouseBehavior,
   Square,
 } from "../interface";
 
 export const useDispatch = (): Dispatch<MinesweeperAction> =>
   useContext(MinesweeperContext).dispatch;
+
+export const useMouseBehavior = (): MouseBehavior =>
+  useContext(MinesweeperContext).state.mouseBehavior;
 
 export const useGameArray = (): Square[] =>
   useContext(MinesweeperContext).state.gameArray;
