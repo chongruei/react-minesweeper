@@ -1,13 +1,86 @@
 import { Square, SquareState, VisitState } from "./interface";
 
-export const isMine = (st: SquareState) =>
-  st === SquareState.REVEALED_MINE || st === SquareState.UNREVEALED_MINE;
+export const generateSquareArray = (
+  amount: number,
+  type: "mine" | "blank"
+): Square[] => {
+  return Array(amount).fill({
+    surroundindMines: 0,
+    visited: VisitState.NONE,
+    flagged: false,
+    state:
+      type === "mine"
+        ? SquareState.UNREVEALED_MINE
+        : SquareState.UNREVEALED_SQUARE,
+  });
+};
 
-export const isRevealed = (st: SquareState) =>
-  st === SquareState.REVEALED_MINE || st === SquareState.REVEALED_SQUARE;
+export const generateGameArray = (
+  openIndex: number,
+  mines: number,
+  columns: number,
+  rows: number
+): Square[] => {
+  // mine array
+  const minesArray: Square[] = generateSquareArray(mines, "mine");
 
-export const isCanMultipleOpen = (square: Square) => {
-  const { surroundindMines, state, flagged } = square;
+  // blank array = rows * columns - mines amount - square (first square shouldn't be mine)
+  const blankArray: Square[] = generateSquareArray(
+    rows * columns - mines - 1,
+    "blank"
+  );
+
+  // random mine positions
+  const gameArray = [...minesArray, ...blankArray].sort(
+    () => Math.random() - 0.5
+  );
+
+  // insert first square to game array by index
+  gameArray.splice(openIndex, 0, {
+    surroundindMines: 0,
+    visited: VisitState.NONE,
+    flagged: false,
+    state: SquareState.REVEALED_SQUARE,
+  });
+
+  return deepClone(gameArray);
+};
+
+export const isMine = (square: Square) =>
+  square.state === SquareState.REVEALED_MINE ||
+  square.state === SquareState.UNREVEALED_MINE;
+
+export const isRevealed = (square: Square) =>
+  square.state === SquareState.REVEALED_MINE ||
+  square.state === SquareState.REVEALED_SQUARE;
+
+export const isBothFlagAndMine = (square: Square): boolean => {
+  return square.flagged && isMine(square);
+};
+
+export const isAvailiableBeVisiting = (square: Square): boolean => {
+  const { visited, flagged } = square;
+  return visited === VisitState.NONE && !(flagged || isRevealed(square));
+};
+
+export const isAbleToOpenSquare = (
+  squareArray: Square[],
+  openIndex: number
+): boolean => {
+  if (openIndex === -1) return false;
+  const clickedSquare = squareArray[openIndex];
+  if (clickedSquare.flagged) return false;
+
+  return true;
+};
+
+export const isAbleToOpenSquares = (
+  squareArray: Square[],
+  openIndex: number
+): boolean => {
+  if (openIndex === -1) return false;
+  const clickedSquare = squareArray[openIndex];
+  const { surroundindMines, state, flagged } = clickedSquare;
   if (
     state === SquareState.REVEALED_SQUARE &&
     surroundindMines > 0 &&
@@ -18,26 +91,26 @@ export const isCanMultipleOpen = (square: Square) => {
   return false;
 };
 
-export const isAvailiableBeVisiting = (square: Square): boolean => {
-  const { visited, flagged, state } = square;
-  return visited === VisitState.NONE && !(flagged || isRevealed(state));
+export const isGameSet = (gameArray: Square[], mines: number): boolean => {
+  const needOpenSquareAmount = gameArray.length - mines;
+
+  return (
+    gameArray.filter((square) => square.state === SquareState.REVEALED_SQUARE)
+      .length === needOpenSquareAmount
+  );
 };
 
 export const getFlagsAmountByIndexs = (
   gameArray: Square[],
   openIndexs: number[]
-) => {
+): number => {
   return openIndexs.reduce((total, openIndex) => {
     return gameArray[openIndex].flagged ? total + 1 : total;
   }, 0);
 };
 
-export const getAllBothFlagAndMines = (mineArray: Square[]): Square[] => {
+export const getAllMineSquareWithFlag = (mineArray: Square[]): Square[] => {
   return mineArray.filter((square) => isBothFlagAndMine(square));
-};
-
-export const isBothFlagAndMine = (square: Square): boolean => {
-  return square.flagged && isMine(square.state);
 };
 
 export const getSurroundingIndexs = (
@@ -82,6 +155,15 @@ export const getSurroundingIndexs = (
   });
 };
 
+export const getAllMines = (gameArray: Square[]) => {
+  return gameArray.filter((square) => isMine(square));
+};
+
+export const changeAllMinesToFlags = (gameArray: Square[]) => {
+  const allMines = getAllMines(gameArray);
+  allMines.forEach((square) => (square.flagged = true));
+};
+
 export const openSurroundSquares = (
   gameArray: Square[],
   squareIndexs: number[],
@@ -114,7 +196,7 @@ export const openSurroundSquare = (
     const square = gameArray[surroundingIdx];
 
     // discover the unrevealed mines!
-    if (isMine(square.state)) {
+    if (isMine(square)) {
       findedMines++;
     }
   }
@@ -130,25 +212,29 @@ export const openSurroundSquare = (
   }
 };
 
-export const isGameSet = (gameArray: Square[], mines: number): boolean => {
-  const needOpenSquareAmount = gameArray.length - mines;
-
-  return (
-    gameArray.filter((square) => square.state === SquareState.REVEALED_SQUARE)
-      .length === needOpenSquareAmount
-  );
+export const visitingSquare = (square: Square): void => {
+  if (isAvailiableBeVisiting(square)) {
+    square.visited = VisitState.VISITING;
+  }
 };
 
-export const getAllMines = (gameArray: Square[]) => {
-  return gameArray.filter((square) => isMine(square.state));
+export const visitingMultiSquare = (squares: Square[]): void => {
+  if (squares.length > 0) {
+    squares.forEach((square) => {
+      if (isAvailiableBeVisiting(square)) {
+        square.visited = VisitState.VISITING;
+      }
+    });
+  }
 };
 
-export const changeAllMinesToFlags = (gameArray: Square[]) => {
-  const allMines = getAllMines(gameArray);
-  allMines.forEach((square) => (square.flagged = true));
+export const unVisitingAllSquare = (squares: Square[]) => {
+  squares
+    .filter((square) => square.visited === VisitState.VISITING)
+    .every((square) => (square.visited = VisitState.NONE));
 };
 
-export const getNumberColor = (num: number) => {
+export const getNumberColor = (num: number): string => {
   switch (num) {
     case 1:
       return "#3171b0";
@@ -167,5 +253,11 @@ export const getNumberColor = (num: number) => {
     // lucky?
     case 8:
       return "#f0fdfa";
+    default:
+      return "";
   }
+};
+
+export const deepClone = <T>(payload: T) => {
+  return JSON.parse(JSON.stringify(payload));
 };

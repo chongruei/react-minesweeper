@@ -32,7 +32,7 @@ export const Square: FC<ISquare> = ({ square, squareIndex }) => {
   const { state, surroundindMines, flagged, visited } = square;
 
   const handleSetFlag = () => {
-    if (isRevealed(state) || gameStatus !== GameStatus.START) {
+    if (isRevealed(square) || gameStatus !== GameStatus.START) {
       return;
     }
     setFlag(squareIndex, !flagged);
@@ -69,7 +69,7 @@ export const Square: FC<ISquare> = ({ square, squareIndex }) => {
   };
 
   const getBGImage = () => {
-    if (gameStatus === GameStatus.LOSE && isMine(square.state)) {
+    if (gameStatus === GameStatus.LOSE && isMine(square)) {
       return 'url("/bomb.png")';
     }
 
@@ -93,7 +93,7 @@ export const Square: FC<ISquare> = ({ square, squareIndex }) => {
         "bg-[#a2d049]": isDark,
         "bg-[#e4c29f]": state === SquareState.REVEALED_SQUARE && !isDark,
         "bg-[#d7b899]": state === SquareState.REVEALED_SQUARE && isDark,
-        "bg-red-600": gameStatus === GameStatus.LOSE && isMine(state),
+        "bg-red-600": gameStatus === GameStatus.LOSE && isMine(square),
         "opacity-50": visited === VisitState.VISITING,
       })}
       // onClick={handleClickSquare}
