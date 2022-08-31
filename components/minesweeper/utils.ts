@@ -7,9 +7,11 @@ export const isRevealed = (st: SquareState) =>
   st === SquareState.REVEALED_MINE || st === SquareState.REVEALED_SQUARE;
 
 export const isCanMultipleOpen = (square: Square) => {
+  const { surroundindMines, state, flagged } = square;
   if (
-    square.state === SquareState.REVEALED_SQUARE &&
-    square.surroundindMines > 0
+    state === SquareState.REVEALED_SQUARE &&
+    surroundindMines > 0 &&
+    !flagged
   ) {
     return true;
   }
@@ -98,7 +100,6 @@ export const openSurroundSquare = (
   rows: number
 ) => {
   const square = gameArray[squareIdx];
-
   if (!square || square.visited === VisitState.VISITED || square.flagged)
     return;
 

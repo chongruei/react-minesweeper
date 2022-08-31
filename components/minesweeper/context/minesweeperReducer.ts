@@ -153,6 +153,7 @@ export const minesweeperReducer = (
       if (openIndex === -1) return { ...state };
 
       const clickedSquare = gameArray[state.openIndex];
+      if (clickedSquare.flagged) return { ...state };
 
       // game over
       if (clickedSquare.state === SquareState.UNREVEALED_MINE) {
