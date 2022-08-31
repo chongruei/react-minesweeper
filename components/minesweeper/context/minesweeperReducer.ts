@@ -17,6 +17,7 @@ import {
   getSurroundingIndexs,
   isAbleToOpenSquare,
   isAbleToOpenSquares,
+  isAbleToSetFlag,
   isGameSet,
   isRevealed,
   openSurroundSquare,
@@ -30,7 +31,7 @@ export const minesweeperReducer = (
   state: IMinesweeperState,
   action: MinesweeperAction
 ): IMinesweeperState => {
-  const { gameArray, openIndex, columns, rows, mines } = state;
+  const { gameArray, openIndex, columns, rows, mines, gameStatus } = state;
   const { type } = action;
 
   switch (type) {
@@ -44,7 +45,13 @@ export const minesweeperReducer = (
     case MinesweeperActionType.START: {
       if (openIndex === -1) return { ...state };
 
-      const gameArray = generateGameArray(openIndex, mines, columns, rows);
+      const gameArray = generateGameArray(
+        openIndex,
+        mines,
+        columns,
+        rows,
+        false
+      );
 
       // first time need to open squares
       openSurroundSquare(gameArray, openIndex, state.columns, state.rows);
@@ -58,16 +65,21 @@ export const minesweeperReducer = (
     case MinesweeperActionType.SET_FLAG: {
       const { squareIdx, install } = action.payload;
       const clickedSquare = state.gameArray[squareIdx];
+      if (!isAbleToSetFlag(clickedSquare, gameStatus)) return { ...state };
 
-      if (isRevealed(clickedSquare) || state.gameStatus !== GameStatus.START)
-        return { ...state };
+      let gameArray = [];
+      if (gameStatus === GameStatus.NEW) {
+        gameArray = generateGameArray(openIndex, mines, columns, rows, true);
+      } else {
+        gameArray = deepClone(state.gameArray);
+      }
 
-      const newGameArray: Square[] = deepClone(state.gameArray);
-      newGameArray[squareIdx].flagged = install;
+      gameArray[squareIdx].flagged = install;
 
       return {
         ...state,
-        gameArray: newGameArray,
+        gameStatus: GameStatus.START,
+        gameArray,
       };
     }
     case MinesweeperActionType.SET_MOUSE_BEHAVIOR: {

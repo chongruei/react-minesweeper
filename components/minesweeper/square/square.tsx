@@ -1,4 +1,4 @@
-import { FC, MouseEventHandler } from "react";
+import { FC, MouseEventHandler, TouchEventHandler, useState } from "react";
 import classnames from "classnames";
 import { useGameConig, useGameStatus } from "../hooks/useMinesweeperContext";
 import {
@@ -9,7 +9,7 @@ import {
   VisitState,
 } from "../interface";
 import { useMinesweeperSlice } from "../hooks/useMinesweeperSlice";
-import { getNumberColor, isMine, isRevealed } from "../utils";
+import { getNumberColor, isAbleToSetFlag, isMine, isRevealed } from "../utils";
 
 import styles from "./square.module.scss";
 
@@ -26,16 +26,17 @@ export const Square: FC<ISquare> = ({ square, squareIndex }) => {
     resetMouseBehavior,
     moveMousePosition,
   } = useMinesweeperSlice();
+  const [lastTouchTime, setLastTouchTime] = useState<number>(
+    new Date().getTime()
+  );
   const { columns } = useGameConig();
   const gameStatus = useGameStatus();
-
   const { state, surroundindMines, flagged, visited } = square;
 
   const handleSetFlag = () => {
-    if (isRevealed(square) || gameStatus !== GameStatus.START) {
-      return;
+    if (isAbleToSetFlag(square, gameStatus)) {
+      setFlag(squareIndex, !flagged);
     }
-    setFlag(squareIndex, !flagged);
   };
 
   const handleMouseDown: MouseEventHandler<HTMLDivElement> = (e) => {
@@ -68,6 +69,23 @@ export const Square: FC<ISquare> = ({ square, squareIndex }) => {
     resetMouseBehavior();
   };
 
+  // support mobile devices
+  const handleTouchStart: TouchEventHandler<HTMLDivElement> = (e) => {
+    e.preventDefault();
+    setLastTouchTime(new Date().getTime());
+    setMouseBehavior(squareIndex, MouseBehavior.SINGLE);
+  };
+
+  const handleTouchEnd: TouchEventHandler<HTMLDivElement> = (e) => {
+    e.preventDefault();
+    if (new Date().getTime() - lastTouchTime > 300) {
+      handleSetFlag();
+    } else {
+      openSquare();
+    }
+    resetMouseBehavior();
+  };
+
   const getBGImage = () => {
     if (gameStatus === GameStatus.LOSE && isMine(square)) {
       return 'url("/bomb.png")';
@@ -96,12 +114,14 @@ export const Square: FC<ISquare> = ({ square, squareIndex }) => {
         "bg-red-600": gameStatus === GameStatus.LOSE && isMine(square),
         "opacity-50": visited === VisitState.VISITING,
       })}
-      // onClick={handleClickSquare}
+      // deprecate: onClick={handleClickSquare}
       onContextMenu={(e) => e.preventDefault()}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       {surroundindMines > 0 && (
         <span

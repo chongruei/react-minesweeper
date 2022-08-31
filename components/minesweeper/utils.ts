@@ -1,4 +1,4 @@
-import { Square, SquareState, VisitState } from "./interface";
+import { GameStatus, Square, SquareState, VisitState } from "./interface";
 
 export const generateSquareArray = (
   amount: number,
@@ -19,14 +19,16 @@ export const generateGameArray = (
   openIndex: number,
   mines: number,
   columns: number,
-  rows: number
+  rows: number,
+  byFlag: boolean
 ): Square[] => {
   // mine array
   const minesArray: Square[] = generateSquareArray(mines, "mine");
 
   // blank array = rows * columns - mines amount - square (first square shouldn't be mine)
+  const blankAmount = rows * columns - mines - 1;
   const blankArray: Square[] = generateSquareArray(
-    rows * columns - mines - 1,
+    byFlag ? blankAmount + 1 : blankAmount,
     "blank"
   );
 
@@ -35,13 +37,15 @@ export const generateGameArray = (
     () => Math.random() - 0.5
   );
 
-  // insert first square to game array by index
-  gameArray.splice(openIndex, 0, {
-    surroundindMines: 0,
-    visited: VisitState.NONE,
-    flagged: false,
-    state: SquareState.REVEALED_SQUARE,
-  });
+  if (!byFlag) {
+    // insert first square to game array by index
+    gameArray.splice(openIndex, 0, {
+      surroundindMines: 0,
+      visited: VisitState.NONE,
+      flagged: false,
+      state: SquareState.REVEALED_SQUARE,
+    });
+  }
 
   return deepClone(gameArray);
 };
@@ -71,6 +75,19 @@ export const isAbleToOpenSquare = (
   const clickedSquare = squareArray[openIndex];
   if (clickedSquare.flagged) return false;
 
+  return true;
+};
+
+export const isAbleToSetFlag = (
+  square: Square,
+  gameStatus: GameStatus
+): boolean => {
+  if (
+    isRevealed(square) ||
+    gameStatus === GameStatus.WIN ||
+    gameStatus === GameStatus.LOSE
+  )
+    return false;
   return true;
 };
 
