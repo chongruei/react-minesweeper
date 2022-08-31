@@ -20,6 +20,13 @@ export const useGameArray = (): Square[] =>
 export const useGameStatus = (): GameStatus =>
   useContext(MinesweeperContext).state.gameStatus;
 
+export const useMinesCount = (): number => {
+  const { mines } = useGameConig();
+  const gameArray = useGameArray();
+
+  return mines - gameArray.filter((square) => square.flagged).length;
+};
+
 export const useGameConig = (): IMinesweeperConfig => {
   const { rows, columns, mines } = useContext(MinesweeperContext).state;
   return {
