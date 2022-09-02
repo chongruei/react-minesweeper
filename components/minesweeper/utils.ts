@@ -206,23 +206,16 @@ export const openSurroundSquare = (
   square.visited = VisitState.VISITED;
 
   const surroundingIndexs = getSurroundingIndexs(squareIdx, columns, rows);
-  let findedMines = 0;
 
-  for (let i = 0; i < surroundingIndexs.length; i++) {
-    const surroundingIdx = surroundingIndexs[i];
-    const square = gameArray[surroundingIdx];
+  const findedMines = gameArray.filter(
+    (square, idx) => surroundingIndexs.includes(idx) && isMine(square)
+  ).length;
 
-    // discover the unrevealed mines!
-    if (isMine(square)) {
-      findedMines++;
-    }
-  }
+  square.surroundindMines = findedMines;
 
   // no any mines => continue openSurroundSquares
   if (findedMines === 0) {
     openSurroundSquares(gameArray, surroundingIndexs, columns, rows);
-  } else {
-    square.surroundindMines = findedMines;
   }
 };
 
